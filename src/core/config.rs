@@ -10,6 +10,45 @@ pub struct SwaggerConfig {
     pub info: Info,
     pub servers: Vec<Server>,
     pub paths: HashMap<String, Path>,
+    pub tags: Vec<Tag>,
+    pub components: Components,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Components {
+    pub schemas: HashMap<String, ComponentSchema>,
+    #[serde(rename = "securitySchemes")]
+    pub security_schemes: HashMap<String, SecurityScheme>,
+}
+#[derive(Deserialize, Debug)]
+pub struct SecurityScheme {
+    #[serde(rename = "type")]
+    pub type_: Option<String>,
+    pub name: String,
+    #[serde(rename = "in")]
+    pub in_: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ComponentSchema {
+    pub required: Option<Vec<String>>,
+    #[serde(rename = "type")]
+    pub type_: String,
+    pub properties: HashMap<String, Property>,
+    pub description: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Property {
+    #[serde(rename = "type")]
+    pub type_: Option<String>,
+    pub format: Option<String>,
+    pub description: Option<String>,
+}
+#[derive(Deserialize, Debug)]
+pub struct Tag {
+    pub name: String,
+    pub description: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -22,6 +61,48 @@ pub struct Path {
 pub struct RequestMethod {
     pub tags: Vec<String>,
     pub summary: Option<String>,
+    pub operationId: String,
+    pub requestBody: Option<RequestBody>,
+    pub responses: HashMap<String, ResponseBody>,
+    pub parameters: Option<Vec<Parameter>>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Parameter {
+    pub name: String,
+    #[serde(rename = "in")]
+    pub in_: String,
+    pub required: bool,
+    pub schema: Option<ParameterSchema>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ParameterSchema {
+    #[serde(rename = "type")]
+    pub type_: String,
+    pub format: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ResponseBody {
+    pub description: String,
+    pub content: HashMap<String, MediaType>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct RequestBody {
+    pub content: HashMap<String, MediaType>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MediaType {
+    pub schema: Schema,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Schema {
+    #[serde(rename = "$ref")]
+    pub ref_: String,
 }
 
 impl SwaggerConfig {
