@@ -8,6 +8,24 @@ pub struct Components {
     #[serde(rename = "securitySchemes")]
     pub security_schemes: HashMap<String, SecurityScheme>,
 }
+
+impl Components {
+    fn get_schema_for_key(&self, key: &str) -> Option<&ComponentSchema> {
+        self.schemas.get(key)
+    }
+
+    pub fn get_type_map(&self, key: &str) -> Option<HashMap<String, String>> {
+        let schema = self.get_schema_for_key(key)?;
+        let mut map = HashMap::new();
+        for (key, value) in &schema.properties {
+            let type_ = value.type_.clone().unwrap_or_else(|| "string".to_string());
+            // todo! component 转 ts string
+            map.insert(key.clone(), type_);
+        }
+        Some(map)
+    }
+}
+
 #[derive(Deserialize, Debug)]
 pub struct SecurityScheme {
     #[serde(rename = "type")]

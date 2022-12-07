@@ -2,6 +2,7 @@ use anyhow::{Ok, Result};
 use spinners::{Spinner, Spinners};
 
 mod core;
+mod helper;
 mod types;
 
 #[tokio::main]
@@ -11,16 +12,12 @@ async fn main() -> Result<()> {
     let config =
         types::SwaggerConfig::from_url("http://192.168.0.124:12001/api/system/v3/api-docs").await?;
     // let config = core::types::SwaggerConfig::from_test().await?;
+    for (_url, path_item) in config.paths {
+        let requests = types::path::generate_requests(&path_item);
+        println!("{:#?}", requests);
+    }
 
     sp.stop();
-    // config.components.schemas.iter().for_each(|(k, v)| {
-    //     println!("{}: {:#?}", k, v);
-    // });
-    for tag in config.tags.iter() {
-        // tag.write_file().await?;
-        let schemas = tag.get_all_schema(&config);
-        println!("{}: {:#?}", tag.name, schemas);
-    }
     Ok(())
 }
 

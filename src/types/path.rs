@@ -1,19 +1,27 @@
 use std::collections::HashMap;
 
+use crate::core::request::Request;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
-pub struct Path {
-    pub post: Option<RequestMethod>,
-    pub get: Option<RequestMethod>,
+pub type Path = HashMap<String, RequestMethod>;
+
+pub fn generate_requests(path: &Path) -> Vec<Request> {
+    let mut requests = Vec::new();
+    for (path, method) in path {
+        let request = Request::new(path, method);
+        requests.push(request);
+    }
+    requests
 }
 
 #[derive(Deserialize, Debug)]
 pub struct RequestMethod {
     pub tags: Vec<String>,
     pub summary: Option<String>,
-    pub operationId: String,
-    pub requestBody: Option<RequestBody>,
+    #[serde(rename = "operationId")]
+    pub operation_id: String,
+    #[serde(rename = "requestBody")]
+    pub request_body: Option<RequestBody>,
     pub responses: HashMap<String, ResponseBody>,
     pub parameters: Option<Vec<Parameter>>,
 }
@@ -63,6 +71,18 @@ pub struct RequestBody {
 #[derive(Deserialize, Debug)]
 pub struct MediaType {
     pub schema: Schema,
+}
+
+impl MediaType {
+    pub fn get_component_key(&self) -> String {
+        self.schema
+            .ref_
+            .clone()
+            .split("/")
+            .last()
+            .unwrap()
+            .to_string()
+    }
 }
 
 #[derive(Deserialize, Debug)]
