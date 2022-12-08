@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::{Ok, Result};
 use spinners::{Spinner, Spinners};
 
@@ -12,11 +14,16 @@ async fn main() -> Result<()> {
     let config =
         types::SwaggerConfig::from_url("http://192.168.0.124:12001/api/system/v3/api-docs").await?;
     // let config = core::types::SwaggerConfig::from_test().await?;
-    for (_url, path_item) in config.paths {
-        let requests = types::path::generate_requests(&path_item);
-        println!("{:#?}", requests);
+    let mut category_req: HashMap<String, Vec<core::request::Request>> = HashMap::new();
+    for (url, path_item) in config.paths {
+        let requests = types::path::generate_requests(&url, &path_item, &config.components);
+        for request in requests {
+            let category = request.category.clone();
+            let mut reqs = category_req.entry(category).or_insert(Vec::new());
+            reqs.push(request);
+        }
     }
-
+    println!("{:#?}", category_req);
     sp.stop();
     Ok(())
 }

@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use crate::{helper::uppercase_first_letter, types::path::RequestMethod};
+use crate::{
+    helper::uppercase_first_letter,
+    types::{component::Components, path::RequestMethod},
+};
 
 #[derive(Debug)]
 pub enum RequestType {
@@ -16,6 +19,7 @@ pub enum RequestType {
 pub struct Request {
     pub r_type: RequestType,
     pub name: String,
+    pub url: String,
     pub description: Option<String>,
     pub category: String,
     pub body: Option<HashMap<String, String>>,
@@ -24,7 +28,7 @@ pub struct Request {
 }
 
 impl Request {
-    pub fn new(path: &str, method: &RequestMethod) -> Request {
+    pub fn new(url: &str, path: &str, method: &RequestMethod, component: &Components) -> Request {
         let r_type: RequestType = match path.to_lowercase().as_str() {
             "post" => RequestType::POST,
             "get" => RequestType::GET,
@@ -38,20 +42,35 @@ impl Request {
             name: uppercase_first_letter(&method.operation_id),
             description: method.summary.clone(),
             category: method.tags[0].clone(),
+            url: url.to_string(),
             body: None,
             query: None,
             response: None,
         };
         request.init_query(method);
-        request.init_body(method);
+        request.init_body(method, component);
+        request.init_response(method, component);
         request
     }
-    fn init_body(&mut self, request: &RequestMethod) {
+    fn init_response(&mut self, request: &RequestMethod, component: &Components) {
+        let mut response = HashMap::new();
+        for (status, value) in &request.responses {
+            if !status.contains("200") {
+                continue;
+            }
+            let componet_key = value.get_component_key();
+            let types = component.get_type_map(&componet_key, true);
+            response.insert(componet_key, types.unwrap_or_default());
+        }
+        self.response = Some(response);
+    }
+    fn init_body(&mut self, request: &RequestMethod, component: &Components) {
         if let Some(request_body) = &request.request_body {
             let mut body = HashMap::new();
             for (_, value) in &request_body.content {
                 let componet_key = value.get_component_key();
-                // body.insert(key.clone(), value.schema.ref_.clone());
+                let types = component.get_type_map(&componet_key, false);
+                body.insert(componet_key, types.unwrap_or_default());
             }
             self.body = Some(body);
         }

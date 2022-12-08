@@ -8,14 +8,18 @@ pub fn uppercase_first_letter(s: &str) -> String {
     }
 }
 
-pub fn map_to_typescript(map: &HashMap<String, String>, requireds: Vec<String>) -> String {
+pub fn map_to_typescript(
+    map: &HashMap<String, String>,
+    requireds: &Vec<String>,
+    is_response: bool,
+) -> String {
     let mut result = String::new();
     for (key, value) in map {
         let mut type_ = value.clone();
         if type_ == "integer" {
             type_ = "number".to_string();
         }
-        if requireds.contains(key) {
+        if requireds.contains(key) || is_response {
             result.push_str(&format!("{}: {};", key, type_));
         } else {
             result.push_str(&format!("{}?: {};", key, type_));

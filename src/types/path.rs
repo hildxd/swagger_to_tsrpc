@@ -3,12 +3,14 @@ use std::collections::HashMap;
 use crate::core::request::Request;
 use serde::Deserialize;
 
+use super::component::Components;
+
 pub type Path = HashMap<String, RequestMethod>;
 
-pub fn generate_requests(path: &Path) -> Vec<Request> {
+pub fn generate_requests(url: &str, path: &Path, component: &Components) -> Vec<Request> {
     let mut requests = Vec::new();
     for (path, method) in path {
-        let request = Request::new(path, method);
+        let request = Request::new(url, path, method, component);
         requests.push(request);
     }
     requests
@@ -61,6 +63,12 @@ pub struct ParameterSchema {
 pub struct ResponseBody {
     pub description: String,
     pub content: HashMap<String, MediaType>,
+}
+
+impl ResponseBody {
+    pub fn get_component_key(&self) -> String {
+        self.content.values().next().unwrap().get_component_key()
+    }
 }
 
 #[derive(Deserialize, Debug)]
